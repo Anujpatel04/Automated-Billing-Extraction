@@ -1,0 +1,9 @@
+streamlit
+pymupdf
+pandas
+requests
+google-cloud-vision
+openpyxl
+xlsxwriter
+numpy
+pillow
