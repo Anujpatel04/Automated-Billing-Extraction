@@ -31,7 +31,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google_key.json"
 client = vision.ImageAnnotatorClient()
 
 # Hugging Face API Key
-HUGGINGFACE_API_KEY = "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"
+HUGGINGFACE_API_KEY = st.secrets["huggingface"]["api_key"]
 
 # Define unwanted keywords to ignore instructional images
 UNWANTED_KEYWORDS = ["instructions", "terms", "guidelines", "help", "support", "important"]
@@ -369,6 +369,7 @@ if uploaded_file:
                 )
             else:
                 st.error("No structured data extracted.")
+
 
 
 
