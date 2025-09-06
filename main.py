@@ -67,7 +67,7 @@ USD_TO_INR_RATE = get_exchange_rate()
 
 # Function to process extracted text using Hugging Face LLM with refined prompt
 def process_text_with_huggingface(text):
-    API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+    API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct"
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
     payload = {
         "inputs": f"""Extract structured data from the given bill text with maximum accuracy. 
@@ -369,6 +369,7 @@ if uploaded_file:
                 )
             else:
                 st.error("No structured data extracted.")
+
 
 
 
