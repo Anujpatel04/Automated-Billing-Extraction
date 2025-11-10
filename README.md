@@ -1,7 +1,7 @@
 <!-- Animated Typing Banner -->
 <p align="center">
   <a href="https://github.com/Anujpatel04/Automated-Billing-Extraction">
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&pause=1000&color=00C4FF&center=true&vCenter=true&width=650&lines=Automated+Billing+Extraction+🧾;OCR+%2B+LLM+powered+data+automation;Extract+%2C+Organize+%26+Export+Expense+Bills+Effortlessly" alt="Typing SVG" />
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=24&pause=1000&color=00C4FF&center=true&vCenter=true&width=700&lines=Automated+Billing+Extraction+🧾;OCR+%2B+LLM+Powered+Data+Automation;Extract+%2C+Organize+%26+Export+Expense+Bills+Effortlessly" alt="Automated Billing Extraction Typing SVG" />
   </a>
 </p>
 
