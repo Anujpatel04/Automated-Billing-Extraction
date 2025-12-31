@@ -1,9 +1,10 @@
-streamlit
+flask
 pymupdf
 pandas
 requests
-google-cloud-vision
 openpyxl
 xlsxwriter
 numpy
 pillow
+python-dotenv
+werkzeug
