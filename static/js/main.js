@@ -216,7 +216,7 @@ async function processFiles() {
         if (response.ok && data.success) {
             updateProgress(100, 'Processing complete!');
             setTimeout(() => {
-                showResults(data.data, data.excel_file);
+                showResults(data.data);
                 showLoading(false);
             }, 500);
         } else {
@@ -230,14 +230,11 @@ async function processFiles() {
 }
 
 // Show results
-function showResults(data, excelFile) {
+function showResults(data) {
     const resultsSection = document.getElementById('resultsSection');
     const tableBody = document.getElementById('tableBody');
     const downloadBtn = document.getElementById('downloadBtn');
     const resultsSummary = document.getElementById('resultsSummary');
-    
-    // Store excel file name
-    downloadBtn.dataset.excelFile = excelFile;
     
     // Calculate statistics
     const totalBills = data.length;
@@ -357,27 +354,38 @@ function updateProgress(percent, text) {
 
 // Download Excel
 async function downloadExcel() {
-    if (!currentSessionId) return;
-    
-    const downloadBtn = document.getElementById('downloadBtn');
-    const excelFile = downloadBtn.dataset.excelFile;
-    
-    if (!excelFile) {
-        showToast('No Excel file available', 'error');
+    if (!currentSessionId) {
+        showToast('No session available', 'error');
         return;
     }
     
     try {
-        const url = `/download/${currentSessionId}/${excelFile}`;
+        // Show loading state
+        const downloadBtn = document.getElementById('downloadBtn');
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        
+        const url = `/download/${currentSessionId}`;
         const link = document.createElement('a');
         link.href = url;
-        link.download = excelFile;
+        link.download = `expense_report_${currentSessionId}.xlsx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        // Reset button after a short delay
+        setTimeout(() => {
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = originalText;
+        }, 1000);
+        
         showToast('Download started!', 'success');
     } catch (error) {
         showToast('Error downloading file: ' + error.message, 'error');
+        const downloadBtn = document.getElementById('downloadBtn');
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Excel';
     }
 }
 

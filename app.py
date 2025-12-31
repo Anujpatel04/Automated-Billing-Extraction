@@ -422,19 +422,33 @@ def process_files():
         df.drop_duplicates(inplace=True)
         df.reset_index(drop=True, inplace=True)
         
-        # Save to Excel
-        excel_filename = f"expense_report_{session_id}.xlsx"
-        excel_path = os.path.join(session_dir, excel_filename)
-        with pd.ExcelWriter(excel_path, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False)
-        
-        # Convert DataFrame to dict for JSON response
+        # Save processed data as JSON (for later Excel generation on download)
+        json_filename = f"processed_data_{session_id}.json"
+        json_path = os.path.join(session_dir, json_filename)
         result_data = df.to_dict('records')
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(result_data, f, ensure_ascii=False, indent=2)
+        
+        # Clean up uploaded images after processing
+        try:
+            for root, dirs, files in os.walk(session_dir):
+                for file in files:
+                    if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                        file_path = os.path.join(root, file)
+                        os.remove(file_path)
+            
+            # Also clean up extracted_bills folder
+            extract_dir = app.config['EXTRACT_FOLDER']
+            if os.path.exists(extract_dir):
+                shutil.rmtree(extract_dir)
+                os.makedirs(extract_dir, exist_ok=True)
+        except Exception as cleanup_error:
+            # Log but don't fail if cleanup fails
+            print(f"Warning: Error during cleanup: {cleanup_error}")
         
         return jsonify({
             'success': True,
             'data': result_data,
-            'excel_file': excel_filename,
             'session_id': session_id
         })
         
@@ -442,16 +456,47 @@ def process_files():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/download/<session_id>/<filename>')
-def download_file(session_id, filename):
+@app.route('/download/<session_id>')
+def download_file(session_id):
     try:
         session_dir = os.path.join(app.config['UPLOAD_FOLDER'], session_id)
-        file_path = os.path.join(session_dir, filename)
+        json_filename = f"processed_data_{session_id}.json"
+        json_path = os.path.join(session_dir, json_filename)
         
-        if not os.path.exists(file_path):
-            return jsonify({'error': 'File not found'}), 404
+        if not os.path.exists(json_path):
+            return jsonify({'error': 'Processed data not found. Please process files first.'}), 404
         
-        return send_file(file_path, as_attachment=True, download_name=filename)
+        # Read the processed data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            result_data = json.load(f)
+        
+        # Create DataFrame from the data
+        df = pd.DataFrame(result_data)
+        
+        # Generate Excel file on-demand
+        excel_filename = f"expense_report_{session_id}.xlsx"
+        excel_path = os.path.join(session_dir, excel_filename)
+        with pd.ExcelWriter(excel_path, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False)
+        
+        # Send the file
+        response = send_file(excel_path, as_attachment=True, download_name=excel_filename)
+        
+        # Clean up the Excel file after sending (optional - you can remove this if you want to keep it)
+        # The JSON file is kept for potential re-downloads
+        try:
+            # Schedule cleanup after response is sent
+            import threading
+            def cleanup_excel():
+                import time
+                time.sleep(2)  # Wait a bit to ensure file is sent
+                if os.path.exists(excel_path):
+                    os.remove(excel_path)
+            threading.Thread(target=cleanup_excel, daemon=True).start()
+        except Exception:
+            pass  # Ignore cleanup errors
+        
+        return response
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
