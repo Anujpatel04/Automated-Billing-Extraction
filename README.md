@@ -62,10 +62,6 @@ python app.py
 6. Access the application:
 Open your browser and navigate to `http://localhost:5001`
 
-## Project Structure
-
-```
-
 ## Usage
 
 1. Upload files using drag and drop or click to select
