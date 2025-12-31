@@ -28,6 +28,9 @@ for folder in [app.config['UPLOAD_FOLDER'], app.config['EXTRACT_FOLDER'], 'stati
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+# In-memory storage for processed data (no disk storage)
+processed_data_cache = {}
+
 # Azure OpenAI API Configuration
 AZURE_OPENAI_API_KEY = os.getenv("GPT_4O_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -422,20 +425,15 @@ def process_files():
         df.drop_duplicates(inplace=True)
         df.reset_index(drop=True, inplace=True)
         
-        # Save processed data as JSON (for later Excel generation on download)
-        json_filename = f"processed_data_{session_id}.json"
-        json_path = os.path.join(session_dir, json_filename)
+        # Store processed data in memory only (no disk storage)
         result_data = df.to_dict('records')
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(result_data, f, ensure_ascii=False, indent=2)
+        processed_data_cache[session_id] = result_data
         
-        # Clean up uploaded images after processing
+        # Clean up ALL uploaded files and session directory after processing
         try:
-            for root, dirs, files in os.walk(session_dir):
-                for file in files:
-                    if file.lower().endswith(('.png', '.jpg', '.jpeg')):
-                        file_path = os.path.join(root, file)
-                        os.remove(file_path)
+            # Remove entire session directory
+            if os.path.exists(session_dir):
+                shutil.rmtree(session_dir)
             
             # Also clean up extracted_bills folder
             extract_dir = app.config['EXTRACT_FOLDER']
@@ -459,44 +457,31 @@ def process_files():
 @app.route('/download/<session_id>')
 def download_file(session_id):
     try:
-        session_dir = os.path.join(app.config['UPLOAD_FOLDER'], session_id)
-        json_filename = f"processed_data_{session_id}.json"
-        json_path = os.path.join(session_dir, json_filename)
-        
-        if not os.path.exists(json_path):
+        # Get processed data from memory cache
+        if session_id not in processed_data_cache:
             return jsonify({'error': 'Processed data not found. Please process files first.'}), 404
         
-        # Read the processed data
-        with open(json_path, 'r', encoding='utf-8') as f:
-            result_data = json.load(f)
+        result_data = processed_data_cache[session_id]
         
         # Create DataFrame from the data
         df = pd.DataFrame(result_data)
         
-        # Generate Excel file on-demand
+        # Generate Excel file in memory (no disk storage)
         excel_filename = f"expense_report_{session_id}.xlsx"
-        excel_path = os.path.join(session_dir, excel_filename)
-        with pd.ExcelWriter(excel_path, engine="xlsxwriter") as writer:
+        output = io.BytesIO()
+        
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df.to_excel(writer, index=False)
         
-        # Send the file
-        response = send_file(excel_path, as_attachment=True, download_name=excel_filename)
+        output.seek(0)
         
-        # Clean up the Excel file after sending (optional - you can remove this if you want to keep it)
-        # The JSON file is kept for potential re-downloads
-        try:
-            # Schedule cleanup after response is sent
-            import threading
-            def cleanup_excel():
-                import time
-                time.sleep(2)  # Wait a bit to ensure file is sent
-                if os.path.exists(excel_path):
-                    os.remove(excel_path)
-            threading.Thread(target=cleanup_excel, daemon=True).start()
-        except Exception:
-            pass  # Ignore cleanup errors
-        
-        return response
+        # Send the file from memory
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=excel_filename
+        )
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -505,6 +490,11 @@ def download_file(session_id):
 @app.route('/cleanup/<session_id>', methods=['POST'])
 def cleanup_session(session_id):
     try:
+        # Remove from memory cache
+        if session_id in processed_data_cache:
+            del processed_data_cache[session_id]
+        
+        # Clean up session directory if it still exists
         session_dir = os.path.join(app.config['UPLOAD_FOLDER'], session_id)
         if os.path.exists(session_dir):
             shutil.rmtree(session_dir)
