@@ -2,7 +2,9 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load from root .env file at /Users/anuj/Desktop/Automated_Bill_Extraction/.env
+root_env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
+load_dotenv(root_env_path)
 
 class Config:
     SECRET_KEY = os.getenv('JWT_SECRET', os.getenv('SECRET_KEY', 'change-me-in-production'))
@@ -30,6 +32,8 @@ class Config:
     
     PORT = int(os.getenv('PORT', 8000))
     HOST = os.getenv('HOST', '0.0.0.0')
+    
+    EXCHANGE_RATE_API_KEY = os.getenv('EXCHANGE_RATE_API_KEY')
     
     @staticmethod
     def validate():

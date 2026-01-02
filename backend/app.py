@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flask import Flask, send_file, render_template, send_from_directory
+from flask import Flask, send_file, render_template, send_from_directory, request
 from flask_cors import CORS
 from config import Config
 from extensions.mongodb import mongodb
@@ -34,16 +34,46 @@ def create_app():
         logger.error(str(e))
         raise
     
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, 
+         resources={r"/*": {"origins": "*"}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+    logger.info("CORS enabled for all origins")
+    
     mongodb.init_app(app)
+    logger.info("MongoDB initialized")
+    
     setup_logger(app)
     
     app.register_blueprint(auth_bp)
+    logger.info("Auth blueprint registered")
+    
     app.register_blueprint(expenses_bp)
+    logger.info("Expenses blueprint registered")
+    
     app.register_blueprint(hr_bp)
+    logger.info("HR blueprint registered")
     
     upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads/expenses')
     os.makedirs(upload_folder, exist_ok=True)
+    logger.info(f"Upload folder: {upload_folder}")
+    
+    @app.before_request
+    def log_request_info():
+        logger.info(f">>> {request.method} {request.path} - IP: {request.remote_addr}")
+        logger.debug(f"Headers: {dict(request.headers)}")
+        if request.is_json:
+            try:
+                body = request.get_json()
+                logger.debug(f"Request body: {body}")
+            except:
+                pass
+    
+    @app.after_request
+    def log_response_info(response):
+        logger.info(f"<<< {response.status_code} {request.method} {request.path}")
+        return response
     
     @app.route('/', methods=['GET'])
     def index():
@@ -55,6 +85,7 @@ def create_app():
     
     @app.route('/health', methods=['GET'])
     def health_check():
+        logger.info("Health check requested")
         return {
             'success': True,
             'message': 'Service is healthy',
@@ -105,5 +136,9 @@ if __name__ == '__main__':
     host = Config.HOST
     
     logger.info(f"Starting server on {host}:{port}")
-    app.run(host=host, port=port, debug=False)
+    logger.info(f"MongoDB URI: {Config.MONGO_URI[:50]}..." if len(Config.MONGO_URI) > 50 else f"MongoDB URI: {Config.MONGO_URI}")
+    logger.info(f"OpenAI API Key configured: {'Yes' if Config.OPENAI_API_KEY else 'No'}")
+    logger.info(f"JWT Secret configured: {'Yes' if Config.JWT_SECRET_KEY else 'No'}")
+    
+    app.run(host=host, port=port, debug=True)
 

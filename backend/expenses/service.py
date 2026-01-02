@@ -144,21 +144,24 @@ class ExpenseService:
             return error_response("Failed to retrieve expenses", 500)
     
     @staticmethod
-    def update_expense_status(expense_id: str, status: str) -> tuple:
+    def update_expense_status(expense_id: str, status: str, notes: Optional[str] = None) -> tuple:
         try:
             if status not in [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED]:
                 return error_response("Invalid status. Must be 'approved' or 'rejected'", 400)
             
             expenses_collection = mongodb.get_collection('expenses')
             
+            update_data = {
+                'status': status,
+                'updated_at': datetime.utcnow()
+            }
+            
+            if notes is not None:
+                update_data['hr_notes'] = notes.strip() if notes else None
+            
             result = expenses_collection.update_one(
                 {'_id': ObjectId(expense_id)},
-                {
-                    '$set': {
-                        'status': status,
-                        'updated_at': datetime.utcnow()
-                    }
-                }
+                {'$set': update_data}
             )
             
             if result.matched_count == 0:
@@ -166,7 +169,7 @@ class ExpenseService:
             
             expense = expenses_collection.find_one({'_id': ObjectId(expense_id)})
             
-            logger.info(f"Expense status updated: {expense_id} to {status}")
+            logger.info(f"Expense status updated: {expense_id} to {status} with notes: {bool(notes)}")
             
             return success_response(
                 f"Expense {status} successfully",

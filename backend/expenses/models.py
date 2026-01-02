@@ -38,6 +38,7 @@ class ExpenseModel:
             'image_path': image_path,
             'extracted_data': extracted_data,
             'status': status,
+            'hr_notes': None,
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()
         }
@@ -97,11 +98,11 @@ class ExpenseModel:
             'image_path': expense['image_path'],
             'extracted_data': expense['extracted_data'],
             'status': expense['status'],
+            'hr_notes': expense.get('hr_notes'),
             'created_at': expense['created_at'].isoformat() if isinstance(expense['created_at'], datetime) else expense['created_at'],
             'updated_at': expense['updated_at'].isoformat() if isinstance(expense['updated_at'], datetime) else expense['updated_at']
         }
         
-        # Include user_email if present (for HR views)
         if 'user_email' in expense:
             formatted['user_email'] = expense['user_email']
         

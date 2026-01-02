@@ -36,13 +36,16 @@ export const useAuth = () => {
   const login = async (credentials: LoginRequest) => {
     try {
       const response = await authApi.login(credentials);
-      if (response.success) {
+      if (response.success && response.data) {
+        if (!response.data.token || !response.data.user) {
+          return { success: false, message: 'Invalid response from server' };
+        }
+        
         const userData = response.data.user;
         setUser(userData as User);
         localStorage.setItem('expense_token', response.data.token);
         localStorage.setItem('expense_user', JSON.stringify(userData));
         
-        // Redirect based on role
         if (userData.role === 'HR') {
           navigate('/hr/dashboard');
         } else {
@@ -50,11 +53,21 @@ export const useAuth = () => {
         }
         return { success: true };
       }
-      return { success: false, message: response.message };
+      return { success: false, message: response.message || 'Login failed' };
     } catch (error: any) {
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (error.code === 'ERR_NETWORK' || !error.response) {
+        errorMessage = 'Cannot connect to server. Make sure the backend is running on port 8001.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed',
+        message: errorMessage,
       };
     }
   };
@@ -62,25 +75,29 @@ export const useAuth = () => {
   const register = async (data: RegisterRequest) => {
     try {
       const response = await authApi.register(data);
-      if (response.success) {
-        const userData = response.data.user;
-        setUser(userData as User);
-        localStorage.setItem('expense_token', response.data.token);
-        localStorage.setItem('expense_user', JSON.stringify(userData));
-        
-        // Redirect based on role
-        if (userData.role === 'HR') {
-          navigate('/hr/dashboard');
+      if (response.success && response.data) {
+        if (response.data.token && response.data.user) {
+          const userData = response.data.user;
+          setUser(userData as User);
+          localStorage.setItem('expense_token', response.data.token);
+          localStorage.setItem('expense_user', JSON.stringify(userData));
+          
+          if (userData.role === 'HR') {
+            navigate('/hr/dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+          return { success: true };
         } else {
-          navigate('/dashboard');
+          return { success: true, message: 'Registration successful. Please log in.' };
         }
-        return { success: true };
       }
-      return { success: false, message: response.message };
+      return { success: false, message: response.message || 'Registration failed' };
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
       return {
         success: false,
-        message: error.response?.data?.message || 'Registration failed',
+        message: errorMessage,
       };
     }
   };

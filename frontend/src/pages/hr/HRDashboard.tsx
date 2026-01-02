@@ -29,20 +29,21 @@ export const HRDashboard = () => {
   const expenses = data?.data.expenses || [];
 
   // Calculate statistics
+  const approvedExpenses = expenses.filter((e) => e.status === 'approved');
   const stats = {
     total: expenses.length,
     pending: expenses.filter((e) => e.status === 'pending').length,
     approved: expenses.filter((e) => e.status === 'approved').length,
     rejected: expenses.filter((e) => e.status === 'rejected').length,
-    totalAmount: expenses.reduce((sum, exp) => {
+    totalAmount: approvedExpenses.reduce((sum, exp) => {
       const amount = exp.extracted_data['Bill Amount (INR)'] || exp.extracted_data['Bill Amount'] || '0';
       const numAmount = parseFloat(amount.toString().replace(/[₹$€£¥,]/g, '')) || 0;
       return sum + numAmount;
     }, 0),
   };
 
-  // Monthly data for chart
-  const monthlyData = expenses.reduce((acc: any, exp) => {
+  // Monthly data for chart (only approved expenses)
+  const monthlyData = approvedExpenses.reduce((acc: any, exp) => {
     const date = new Date(exp.created_at);
     const month = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     const amount = parseFloat(
@@ -63,8 +64,8 @@ export const HRDashboard = () => {
     .map(([month, amount]) => ({ month, amount: Number(amount) }))
     .sort((a, b) => a.month.localeCompare(b.month));
 
-  // Category data
-  const categoryData = expenses.reduce((acc: any, exp) => {
+  // Category data (only approved expenses)
+  const categoryData = approvedExpenses.reduce((acc: any, exp) => {
     const type = exp.extracted_data['Bill Type'] || 'other';
     if (acc[type]) {
       acc[type]++;
@@ -125,7 +126,7 @@ export const HRDashboard = () => {
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-sm text-gray-600">Total Amount (Approved)</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {formatCurrency(stats.totalAmount)}
                 </p>

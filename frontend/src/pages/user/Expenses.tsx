@@ -7,7 +7,7 @@ import { expensesApi } from '@/api/expenses.api';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatCurrency, formatDate, getStatusColor, getBillTypeColor } from '@/utils/formatters';
-import { Eye, Receipt } from 'lucide-react';
+import { Eye, Receipt, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 
 export const Expenses = () => {
@@ -28,7 +28,7 @@ export const Expenses = () => {
   const getImageUrl = (imagePath: string) => {
     // Extract relative path
     const path = imagePath.replace('uploads/expenses/', '');
-    return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/files/${path}`;
+    return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'}/files/${path}`;
   };
 
   return (
@@ -134,13 +134,20 @@ export const Expenses = () => {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            onClick={() => handleViewDetails(expense)}
-                            className="text-primary-600 hover:text-primary-800 flex items-center gap-1"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleViewDetails(expense)}
+                              className="text-primary-600 hover:text-primary-800 flex items-center gap-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </button>
+                            {expense.hr_notes && (
+                              <span className="text-xs text-blue-600 flex items-center gap-1" title="HR has left notes">
+                                <MessageSquare className="w-3 h-3" />
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -204,6 +211,39 @@ export const Expenses = () => {
                 </div>
               </div>
             </div>
+            
+            {selectedExpense.hr_notes && (
+              <div className={`border rounded-lg p-4 ${
+                selectedExpense.status === 'approved' 
+                  ? 'bg-green-50 border-green-200' 
+                  : selectedExpense.status === 'rejected'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <h3 className={`text-sm font-semibold mb-2 ${
+                      selectedExpense.status === 'approved'
+                        ? 'text-green-900'
+                        : selectedExpense.status === 'rejected'
+                        ? 'text-red-900'
+                        : 'text-blue-900'
+                    }`}>
+                      HR Notes
+                    </h3>
+                    <p className={`text-sm whitespace-pre-wrap ${
+                      selectedExpense.status === 'approved'
+                        ? 'text-green-800'
+                        : selectedExpense.status === 'rejected'
+                        ? 'text-red-800'
+                        : 'text-blue-800'
+                    }`}>
+                      {selectedExpense.hr_notes}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Extracted Data</h3>

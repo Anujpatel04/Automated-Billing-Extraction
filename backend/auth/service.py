@@ -77,12 +77,25 @@ class AuthService:
         try:
             users_collection = mongodb.get_collection('users')
             
+            logger.debug(f"Attempting login for email: {email.lower()}")
+            
             user = users_collection.find_one({'email': email.lower()})
             if not user:
+                logger.warning(f"Login failed: User not found for email: {email.lower()}")
                 return error_response("Invalid email or password", 401)
             
-            if not verify_password(password, user['password_hash']):
+            logger.debug(f"User found: {user.get('email')}, checking password...")
+            
+            if 'password_hash' not in user:
+                logger.error(f"User {email} has no password_hash field")
+                return error_response("Invalid user data", 500)
+            
+            password_valid = verify_password(password, user['password_hash'])
+            if not password_valid:
+                logger.warning(f"Login failed: Invalid password for email: {email.lower()}")
                 return error_response("Invalid email or password", 401)
+            
+            logger.debug("Password verified, generating token...")
             
             token = generate_token(
                 str(user['_id']),
@@ -90,7 +103,7 @@ class AuthService:
                 user['role']
             )
             
-            logger.info(f"User logged in: {email}")
+            logger.info(f"User logged in successfully: {email}")
             
             return success_response(
                 "Login successful",
@@ -105,6 +118,6 @@ class AuthService:
             )
             
         except Exception as e:
-            logger.error(f"Login error: {str(e)}")
-            return error_response("Login failed", 500)
+            logger.error(f"Login error: {str(e)}", exc_info=True)
+            return error_response(f"Login failed: {str(e)}", 500)
 

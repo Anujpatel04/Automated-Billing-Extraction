@@ -19,11 +19,23 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Environment
+# Environment - NEVER commit .env files
 .env
+.env.*
+*.env
+!.env.example
+**/.env
+**/.env.*
+**/*.env
+!**/.env.example
+frontend/.env
+frontend/.env.*
+backend/.env
+backend/.env.*
 .env.local
 .env.production
-.env.*.local
+.env.development
+.env.test
 
 # IDE
 .vscode/

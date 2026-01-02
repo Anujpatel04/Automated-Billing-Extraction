@@ -18,6 +18,7 @@ export interface Expense {
     Details?: string;
   };
   status: 'pending' | 'approved' | 'rejected';
+  hr_notes?: string | null;
   created_at: string;
   updated_at: string;
   user_email?: string; // For HR view
@@ -40,6 +41,7 @@ export interface ExpenseResponse {
 
 export interface UpdateStatusRequest {
   status: 'approved' | 'rejected';
+  notes?: string;
 }
 
 export const expensesApi = {
@@ -79,11 +81,12 @@ export const expensesApi = {
 
   updateStatus: async (
     expenseId: string,
-    status: 'approved' | 'rejected'
+    status: 'approved' | 'rejected',
+    notes?: string
   ): Promise<ExpenseResponse> => {
     const response = await apiClient.patch<ExpenseResponse>(
       `/hr/expenses/${expenseId}/status`,
-      { status }
+      { status, notes }
     );
     return response.data;
   },

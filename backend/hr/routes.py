@@ -54,11 +54,12 @@ def update_expense_status(expense_id):
             return error_response("Request body is required", 400)
         
         status = data.get('status')
+        notes = data.get('notes')
         
         if not status:
             return error_response("Status is required", 400)
         
-        return ExpenseService.update_expense_status(expense_id, status)
+        return ExpenseService.update_expense_status(expense_id, status, notes)
         
     except Exception as e:
         logger.error(f"Update expense status route error: {str(e)}")

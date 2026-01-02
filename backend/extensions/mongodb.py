@@ -19,11 +19,18 @@ class MongoDB:
             mongo_uri = app.config.get('MONGO_URI')
             db_name = app.config.get('MONGO_DB_NAME', 'expense_management')
             
+            if not mongo_uri:
+                logger.error("MONGO_URI not found in configuration")
+                raise ValueError("MONGO_URI is required but not set")
+            
+            logger.info(f"Connecting to MongoDB: {db_name}")
+            logger.debug(f"MongoDB URI: {mongo_uri[:50]}..." if len(mongo_uri) > 50 else f"MongoDB URI: {mongo_uri}")
+            
             self.client = MongoClient(
                 mongo_uri,
-                serverSelectionTimeoutMS=5000,
-                connectTimeoutMS=5000,
-                socketTimeoutMS=5000
+                serverSelectionTimeoutMS=10000,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=10000
             )
             
             self.client.admin.command('ping')
@@ -34,6 +41,14 @@ class MongoDB:
             
         except (ConnectionFailure, ServerSelectionTimeoutError) as e:
             logger.error(f"Failed to connect to MongoDB: {str(e)}")
+            logger.error("Please check:")
+            logger.error("  1. MongoDB server is running (if local)")
+            logger.error("  2. MONGO_URI is correct in .env file")
+            logger.error("  3. IP is whitelisted in MongoDB Atlas (if using Atlas)")
+            logger.error("  4. Network connection is available")
+            raise
+        except Exception as e:
+            logger.error(f"MongoDB initialization error: {str(e)}", exc_info=True)
             raise
     
     def _create_indexes(self):

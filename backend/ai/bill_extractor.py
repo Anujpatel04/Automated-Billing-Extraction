@@ -14,7 +14,12 @@ class BillExtractor:
     @staticmethod
     def get_exchange_rate():
         try:
-            url = "https://v6.exchangerate-api.com/v6/0c301cab691bf1fa55cc981e/latest/USD"
+            api_key = current_app.config.get('EXCHANGE_RATE_API_KEY')
+            if not api_key:
+                logger.warning("EXCHANGE_RATE_API_KEY not set, using fallback rate")
+                return 83.0
+            
+            url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest/USD"
             response = requests.get(url, timeout=10)
             data = response.json()
             return data["conversion_rates"]["INR"]

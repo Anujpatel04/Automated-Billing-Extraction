@@ -7,14 +7,21 @@ Flask-based REST API for expense management with OpenAI bill extraction.
 ### Installation
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+# From project root, create and activate myenv
+cd /Users/anuj/Desktop/Automated_Bill_Extraction/Automated-Billing-Extraction
+python3 -m venv myenv
+source myenv/bin/activate
+
+# Install dependencies
+cd backend
 pip install -r requirements.txt
 ```
 
 ### Configuration
 
-Create `.env` file:
+The backend uses the root `.env` file at `/Users/anuj/Desktop/Automated_Bill_Extraction/.env`.
+
+Make sure your root `.env` file contains:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key
@@ -26,6 +33,8 @@ PORT=8000
 ### Run
 
 ```bash
+# Make sure myenv is activated
+source ../myenv/bin/activate
 python app.py
 ```
 
