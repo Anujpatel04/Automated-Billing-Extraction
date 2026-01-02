@@ -47,15 +47,6 @@ Types: `feat:`, `fix:`, `refactor:`, `docs:`, `style:`, `test:`, `chore:`
 - Address all review comments
 - No force pushes after review
 
-## Prohibited
-
-- ❌ Committing `.env` files or API keys
-- ❌ Using `any` type (unless necessary)
-- ❌ Leaving console.log statements
-- ❌ AI-generated verbose comments
-- ❌ Force pushing to main/master
-- ❌ Merging without review
-- ❌ Breaking existing functionality
 
 ## Security
 
@@ -63,13 +54,3 @@ Types: `feat:`, `fix:`, `refactor:`, `docs:`, `style:`, `test:`, `chore:`
 - Validate all user inputs
 - Sanitize file uploads
 - Review security implications of dependencies
-
-## Code Review Checklist
-
-- [ ] Follows style guidelines
-- [ ] No AI-generated comments
-- [ ] All tests pass
-- [ ] No console.log statements
-- [ ] Error handling implemented
-- [ ] Documentation updated
-- [ ] No security vulnerabilities
