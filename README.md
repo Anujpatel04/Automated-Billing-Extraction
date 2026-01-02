@@ -100,16 +100,3 @@ npm run dev
 
 - **USER:** Upload expenses, view status and HR notes
 - **HR:** Review, approve/reject with notes, view analytics
-
-## Production
-
-**Backend:**
-```bash
-gunicorn -w 4 -b 0.0.0.0:8000 app:app
-```
-
-**Frontend:**
-```bash
-npm run build
-```
-
