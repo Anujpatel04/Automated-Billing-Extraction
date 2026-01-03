@@ -11,6 +11,7 @@ from utils.responses import error_response
 from auth.routes import auth_bp
 from expenses.routes import expenses_bp
 from hr.routes import hr_bp
+from users.routes import users_bp
 import os
 import logging
 
@@ -54,6 +55,9 @@ def create_app():
     
     app.register_blueprint(hr_bp)
     logger.info("HR blueprint registered")
+    
+    app.register_blueprint(users_bp)
+    logger.info("Users blueprint registered")
     
     upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads/expenses')
     os.makedirs(upload_folder, exist_ok=True)

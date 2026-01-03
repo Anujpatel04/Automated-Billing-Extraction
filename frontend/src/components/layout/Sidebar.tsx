@@ -8,6 +8,7 @@ import {
   Receipt,
   Users,
   FileCheck,
+  User,
 } from 'lucide-react';
 
 interface NavItem {
@@ -31,6 +32,12 @@ const navItems: NavItem[] = [
     roles: ['USER'],
   },
   {
+    label: 'Profile',
+    path: '/profile',
+    icon: User,
+    roles: ['USER'],
+  },
+  {
     label: 'HR Dashboard',
     path: '/hr/dashboard',
     icon: LayoutDashboard,
@@ -40,6 +47,12 @@ const navItems: NavItem[] = [
     label: 'Review Expenses',
     path: '/hr/expenses',
     icon: FileCheck,
+    roles: ['HR'],
+  },
+  {
+    label: 'User Management',
+    path: '/hr/users',
+    icon: Users,
     roles: ['HR'],
   },
 ];
@@ -85,6 +98,7 @@ export const Sidebar = () => {
     </aside>
   );
 };
+
 
 
 

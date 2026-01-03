@@ -90,5 +90,52 @@ export const expensesApi = {
     );
     return response.data;
   },
+
+  bulkUpdateStatus: async (
+    expenseIds: string[],
+    status: 'approved' | 'rejected' | 'pending',
+    notes?: string
+  ): Promise<{ success: boolean; message: string; data: { updated_count: number; status: string } }> => {
+    const response = await apiClient.post('/hr/expenses/bulk-update', {
+      expense_ids: expenseIds,
+      status,
+      notes,
+    });
+    return response.data;
+  },
+
+  exportExpenses: async (params?: {
+    format?: 'excel' | 'csv';
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+  }): Promise<Blob> => {
+    const response = await apiClient.get('/expenses/export', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportAllExpenses: async (params?: {
+    format?: 'excel' | 'csv';
+    status?: string;
+    user_id?: string;
+    date_from?: string;
+    date_to?: string;
+  }): Promise<Blob> => {
+    const response = await apiClient.get('/hr/expenses/export', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadFile: async (expenseId: string): Promise<Blob> => {
+    const response = await apiClient.get(`/expenses/${expenseId}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 

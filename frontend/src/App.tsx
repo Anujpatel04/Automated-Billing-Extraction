@@ -8,8 +8,10 @@ import { Login } from '@/pages/auth/Login';
 import { Register } from '@/pages/auth/Register';
 import { UserDashboard } from '@/pages/user/Dashboard';
 import { Expenses } from '@/pages/user/Expenses';
+import { Profile } from '@/pages/user/Profile';
 import { HRDashboard } from '@/pages/hr/HRDashboard';
 import { HRExpenses } from '@/pages/hr/HRExpenses';
+import { HRUsers } from '@/pages/hr/Users';
 import { useAuth } from '@/hooks/useAuth';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 
@@ -66,6 +68,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute allowedRoles={['USER']}>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
 
       {/* HR routes */}
       <Route
@@ -81,6 +91,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['HR']}>
             <HRExpenses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr/users"
+        element={
+          <ProtectedRoute allowedRoles={['HR']}>
+            <HRUsers />
           </ProtectedRoute>
         }
       />
