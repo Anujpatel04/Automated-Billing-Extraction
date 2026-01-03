@@ -40,7 +40,7 @@ export interface ExpenseResponse {
 }
 
 export interface UpdateStatusRequest {
-  status: 'approved' | 'rejected';
+  status: 'approved' | 'rejected' | 'pending';
   notes?: string;
 }
 
@@ -81,7 +81,7 @@ export const expensesApi = {
 
   updateStatus: async (
     expenseId: string,
-    status: 'approved' | 'rejected',
+    status: 'approved' | 'rejected' | 'pending',
     notes?: string
   ): Promise<ExpenseResponse> => {
     const response = await apiClient.patch<ExpenseResponse>(

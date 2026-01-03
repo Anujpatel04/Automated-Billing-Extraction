@@ -25,12 +25,13 @@ export const UserDashboard = () => {
   });
 
   const expenses = data?.data.expenses || [];
+  const approvedExpenses = expenses.filter((e) => e.status === 'approved');
 
   const stats = {
     total: expenses.length,
     pending: expenses.filter((e) => e.status === 'pending').length,
     approved: expenses.filter((e) => e.status === 'approved').length,
-    totalAmount: expenses.reduce((sum, exp) => {
+    totalAmount: approvedExpenses.reduce((sum, exp) => {
       const amount = exp.extracted_data['Bill Amount (INR)'] || exp.extracted_data['Bill Amount'] || '0';
       const numAmount = parseFloat(amount.toString().replace(/[₹$€£¥,]/g, '')) || 0;
       return sum + numAmount;
@@ -193,7 +194,7 @@ export const UserDashboard = () => {
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-sm text-gray-600">Total Amount (Approved)</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
                   {formatCurrency(stats.totalAmount)}
                 </p>

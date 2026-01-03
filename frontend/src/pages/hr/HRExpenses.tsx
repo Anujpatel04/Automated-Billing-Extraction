@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatCurrency, formatDate } from '@/utils/formatters';
-import { Eye, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, MessageSquare, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { useToastContext } from '@/components/ui/ToastProvider';
 
@@ -29,15 +29,19 @@ export const HRExpenses = () => {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ expenseId, status, notes }: { expenseId: string; status: 'approved' | 'rejected'; notes?: string }) =>
+    mutationFn: ({ expenseId, status, notes }: { expenseId: string; status: 'approved' | 'rejected' | 'pending'; notes?: string }) =>
       expensesApi.updateStatus(expenseId, status, notes),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['hr-all-expenses'] });
       queryClient.invalidateQueries({ queryKey: ['user-expenses'] });
       setSelectedExpense(null);
       setNotes('');
-      const action = variables.status === 'approved' ? 'approved' : 'rejected';
-      showSuccess(`Expense ${action} successfully!`);
+      const statusMessages: Record<string, string> = {
+        'approved': 'approved',
+        'rejected': 'rejected',
+        'pending': 'set to pending'
+      };
+      showSuccess(`Expense ${statusMessages[variables.status]} successfully!`);
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 
@@ -49,12 +53,8 @@ export const HRExpenses = () => {
 
   const expenses = data?.data.expenses || [];
 
-  const handleApprove = (expenseId: string) => {
-    updateStatusMutation.mutate({ expenseId, status: 'approved', notes: notes.trim() || undefined });
-  };
-
-  const handleReject = (expenseId: string) => {
-    updateStatusMutation.mutate({ expenseId, status: 'rejected', notes: notes.trim() || undefined });
+  const handleStatusChange = (expenseId: string, status: 'approved' | 'rejected' | 'pending') => {
+    updateStatusMutation.mutate({ expenseId, status, notes: notes.trim() || undefined });
   };
 
   const getImageUrl = (imagePath: string) => {
@@ -169,36 +169,18 @@ export const HRExpenses = () => {
                                 <MessageSquare className="w-3 h-3" />
                               </span>
                             )}
-                            {expense.status === 'pending' && (
-                              <>
-                                <Button
-                                  variant="success"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedExpense(expense);
-                                    setNotes('');
-                                  }}
-                                  disabled={updateStatusMutation.isPending}
-                                  className="flex items-center gap-1"
-                                >
-                                  <CheckCircle className="w-4 h-4" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="danger"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedExpense(expense);
-                                    setNotes('');
-                                  }}
-                                  disabled={updateStatusMutation.isPending}
-                                  className="flex items-center gap-1"
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                  Reject
-                                </Button>
-                              </>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedExpense(expense);
+                                setNotes(expense.hr_notes || '');
+                              }}
+                              disabled={updateStatusMutation.isPending}
+                              className="flex items-center gap-1"
+                            >
+                              Change Status
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -289,45 +271,64 @@ export const HRExpenses = () => {
               </div>
             </div>
 
-            {selectedExpense.status === 'pending' && (
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add notes for the employee (e.g., reason for approval/rejection, additional information...)"
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    These notes will be visible to the employee
-                  </p>
-                </div>
-                <div className="flex gap-3">
+            <div className="space-y-4 pt-4 border-t border-gray-200">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes for the employee (e.g., reason for status change, additional information...)"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  These notes will be visible to the employee
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Change Status
+                </label>
+                <div className="grid grid-cols-3 gap-3">
                   <Button
-                    variant="success"
-                    onClick={() => handleApprove(selectedExpense.expense_id)}
-                    disabled={updateStatusMutation.isPending}
-                    className="flex-1 flex items-center justify-center gap-2"
+                    variant={selectedExpense.status === 'approved' ? 'success' : 'outline'}
+                    onClick={() => handleStatusChange(selectedExpense.expense_id, 'approved')}
+                    disabled={updateStatusMutation.isPending || selectedExpense.status === 'approved'}
+                    className="flex items-center justify-center gap-2"
                   >
-                    <CheckCircle className="w-5 h-5" />
+                    <CheckCircle className="w-4 h-4" />
                     Approve
                   </Button>
                   <Button
-                    variant="danger"
-                    onClick={() => handleReject(selectedExpense.expense_id)}
-                    disabled={updateStatusMutation.isPending}
-                    className="flex-1 flex items-center justify-center gap-2"
+                    variant={selectedExpense.status === 'rejected' ? 'danger' : 'outline'}
+                    onClick={() => handleStatusChange(selectedExpense.expense_id, 'rejected')}
+                    disabled={updateStatusMutation.isPending || selectedExpense.status === 'rejected'}
+                    className="flex items-center justify-center gap-2"
                   >
-                    <XCircle className="w-5 h-5" />
+                    <XCircle className="w-4 h-4" />
                     Reject
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleStatusChange(selectedExpense.expense_id, 'pending')}
+                    disabled={updateStatusMutation.isPending || selectedExpense.status === 'pending'}
+                    className={`flex items-center justify-center gap-2 ${
+                      selectedExpense.status === 'pending' 
+                        ? 'border-yellow-500 text-yellow-700 bg-yellow-50' 
+                        : ''
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    Set Pending
+                  </Button>
                 </div>
+                <p className="mt-2 text-xs text-gray-500 text-center">
+                  Current status: <span className="font-medium capitalize">{selectedExpense.status}</span>
+                </p>
               </div>
-            )}
+            </div>
           </div>
         )}
       </Modal>

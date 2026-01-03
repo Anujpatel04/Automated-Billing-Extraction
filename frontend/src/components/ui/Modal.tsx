@@ -66,3 +66,6 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalPr
   );
 };
 
+
+
+

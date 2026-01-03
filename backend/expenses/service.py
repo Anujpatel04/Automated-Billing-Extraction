@@ -146,8 +146,8 @@ class ExpenseService:
     @staticmethod
     def update_expense_status(expense_id: str, status: str, notes: Optional[str] = None) -> tuple:
         try:
-            if status not in [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED]:
-                return error_response("Invalid status. Must be 'approved' or 'rejected'", 400)
+            if status not in [ExpenseStatus.APPROVED, ExpenseStatus.REJECTED, ExpenseStatus.PENDING]:
+                return error_response("Invalid status. Must be 'approved', 'rejected', or 'pending'", 400)
             
             expenses_collection = mongodb.get_collection('expenses')
             
@@ -171,8 +171,15 @@ class ExpenseService:
             
             logger.info(f"Expense status updated: {expense_id} to {status} with notes: {bool(notes)}")
             
+            status_messages = {
+                'approved': 'approved',
+                'rejected': 'rejected',
+                'pending': 'set to pending'
+            }
+            message = f"Expense {status_messages.get(status, status)} successfully"
+            
             return success_response(
-                f"Expense {status} successfully",
+                message,
                 ExpenseModel.format_expense_response(expense)
             )
             
